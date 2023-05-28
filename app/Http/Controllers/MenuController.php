@@ -92,7 +92,41 @@ class MenuController extends BaseController
     ]
      */
 
-    public function getMenuItems() {
-        throw new \Exception('implement in coding task 3');
+    public function getMenuItems()
+    {
+
+        //Fetch all menu items
+        $menuItems = MenuItem::all();
+
+        //Group menu items by their parent_id
+        $groupedMenuItems = $menuItems->groupBy('parent_id');
+
+        //get Top level(top parents) menu items
+        $topLevelMenuItems = $groupedMenuItems[null] ?? collect();
+
+        //map top levelmenuitem & process its children recursively
+        $menuItems = $topLevelMenuItems->map(function ($menuItem) use ($groupedMenuItems) {
+            return $this->processMenuItem($menuItem, $groupedMenuItems);
+        });
+
+        return $menuItems;
+        // throw new \Exception('implement in coding task 3');
+    }
+
+    private function processMenuItem($menuItem, $groupedMenuItems)
+    {
+        //get childrens of current menu_item
+        $children = $groupedMenuItems[$menuItem->id] ?? collect();
+
+        if ($children->isNotEmpty()) {
+            //recursively process children menu items
+            $menuItem->children = $children->map(
+                function ($child) use ($groupedMenuItems) {
+                    return $this->processMenuItem($child, $groupedMenuItems);
+                }
+            );
+        }
+
+        return $menuItem;
     }
 }
