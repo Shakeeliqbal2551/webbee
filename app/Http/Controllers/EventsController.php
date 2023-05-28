@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\Workshop;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -11,7 +12,8 @@ use Illuminate\Support\Facades\Date;
 
 class EventsController extends BaseController
 {
-    public function getWarmupEvents() {
+    public function getWarmupEvents()
+    {
         return Event::all();
     }
 
@@ -100,7 +102,8 @@ class EventsController extends BaseController
     ]
      */
 
-    public function getEventsWithWorkshops() {
+    public function getEventsWithWorkshops()
+    {
 
         //Fetch all events with workshops using eager loading
         $events = Event::with('workshops')->get();
@@ -185,7 +188,22 @@ class EventsController extends BaseController
     ```
      */
 
-    public function getFutureEventsWithWorkshops() {
-        throw new \Exception('implement in coding task 2');
+    public function getFutureEventsWithWorkshops()
+    {
+
+        //fetch id's of future workshops
+        $futureWorkshopIds = Workshop::where('start', '<', now())
+            ->select('event_id')
+            ->distinct()
+            ->pluck('event_id');
+
+        //fetch events that do not have any future workshops
+        $events = Event::whereNotIn('id', $futureWorkshopIds)
+            ->with('workshops')
+            ->get();
+
+        return response()->json($events);
+
+        // throw new \Exception('implement in coding task 2');
     }
 }
